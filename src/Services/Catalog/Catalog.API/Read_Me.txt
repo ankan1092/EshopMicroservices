@@ -9,6 +9,7 @@
     - Organized by vertical slices, each feature represents a specific business functionality.
     - Contains subfolders for commands, queries, handlers, and related classes.
     - Example: The **Products** folder.
+    - Organized into Model, Features, Data, Abstractions.
 
 3. **Data**:
     - Manages all database interactions.
@@ -23,6 +24,7 @@
 
 6. **Vertical Slice Architecture**:
     - Implements the vertical slice architecture to ensure each feature is self-contained and independent.
+    - Features have dedicated Handler and Endpoint Definitions
 
 7. **Database**:
     - Uses PostgreSQL with the Marten library to provide transactional database capabilities for .NET applications.
