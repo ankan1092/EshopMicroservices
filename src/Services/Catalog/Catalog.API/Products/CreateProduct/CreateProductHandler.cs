@@ -1,6 +1,7 @@
 ﻿using BuildingBlocks.CQRS;  
 using Catalog.API.Models;
 using Mapster;
+using Marten;
 
 namespace Catalog.API.Products.CreateProduct
 {
@@ -13,6 +14,13 @@ namespace Catalog.API.Products.CreateProduct
 
     internal class CreateProductCommandHandler : ICommandHandler<CreateProductCommand, CreateProductResult>
     {
+        private readonly IDocumentSession _session;
+
+        public CreateProductCommandHandler(IDocumentSession session)
+        {
+            //Inject Marten Document Session 
+            _session = session;
+        }
         // Implementing the Handle method to handle the CreateProductCommand
         public async Task<CreateProductResult> Handle(CreateProductCommand command, CancellationToken cancellationToken)
         {
@@ -21,8 +29,11 @@ namespace Catalog.API.Products.CreateProduct
             
             // Save to DB
 
+            _session.Store(product);
+            await _session.SaveChangesAsync(cancellationToken);
+
             // Return result
-            return  new CreateProductResult(Guid.NewGuid());
+            return  new CreateProductResult(product.Id);
         }
     }
 }
