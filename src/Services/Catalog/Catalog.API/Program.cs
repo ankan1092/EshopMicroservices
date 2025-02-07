@@ -1,4 +1,5 @@
 using Carter;
+using FluentValidation;
 using Marten;
 using Microsoft.OpenApi.Models;
 
@@ -10,6 +11,8 @@ builder.Services.AddMediatR(config =>
 {
     config.RegisterServicesFromAssemblies(typeof(Program).Assembly);
 });
+
+builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 
 builder.Services.AddMarten(opts =>
 {
