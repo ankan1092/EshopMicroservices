@@ -24,23 +24,14 @@ namespace Catalog.API.Products.UpdateProduct
     internal class UpdateProductCommandHandler : ICommandHandler<UpdateProductCommand, UpdateProductCommandResult>
     {
         private readonly IDocumentSession _session;
-        private readonly IValidator<UpdateProductCommand> _validator;
 
-        public UpdateProductCommandHandler(IDocumentSession session, IValidator<UpdateProductCommand> validator)
+        public UpdateProductCommandHandler(IDocumentSession session)
         {
             _session = session;
-            _validator = validator;
         }
 
         public async Task<UpdateProductCommandResult> Handle(UpdateProductCommand command, CancellationToken cancellationToken)
         {
-            // Validate command
-            var validationResult = await _validator.ValidateAsync(command, cancellationToken);
-            if (!validationResult.IsValid)
-            {
-                throw new ValidationException(string.Join("; ", validationResult.Errors.Select(e => e.ErrorMessage)));
-            }
-
             // Load product from the database
             var dbProduct = await _session.LoadAsync<Product>(command.Product.Id, cancellationToken);
             if (dbProduct == null)

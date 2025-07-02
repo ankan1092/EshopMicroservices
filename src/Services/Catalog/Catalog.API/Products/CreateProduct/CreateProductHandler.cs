@@ -28,32 +28,19 @@ namespace Catalog.API.Products.CreateProduct
     internal class CreateProductCommandHandler : ICommandHandler<CreateProductCommand, CreateProductResult>
     {
         private readonly IDocumentSession _session;
-        private readonly IValidator<CreateProductCommand> _validator;
-        public CreateProductCommandHandler(IDocumentSession session, IValidator<CreateProductCommand> validator)
+        public CreateProductCommandHandler(IDocumentSession session)
         {
             //Inject Marten Document Session 
             _session = session;
-            _validator = validator;
         }
         // Implementing the Handle method to handle the CreateProductCommand
         public async Task<CreateProductResult> Handle(CreateProductCommand command, CancellationToken cancellationToken)
         {
-            var result = await _validator.ValidateAsync(command,cancellationToken);
-            var errors = result.Errors.Select(e => e.ErrorMessage).ToList();
-
-            if (errors.Any())
-            {
-                throw new ValidationException(errors.FirstOrDefault());
-            }
-            // Convert DTO to Entity Model
+           
             var product = command.Product.Adapt<Product>();
-            
-            // Save to DB
-
             _session.Store(product);
             await _session.SaveChangesAsync(cancellationToken);
 
-            // Return result
             return  new CreateProductResult(product.Id);
         }
     }
