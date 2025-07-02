@@ -1,7 +1,6 @@
 ﻿using BuildingBlocks.CQRS;
 using Catalog.API.Exceptions;
 using Catalog.API.Models;
-using Catalog.API.Products.GetproductById;
 using FluentValidation;
 using Marten;
 
@@ -25,7 +24,7 @@ namespace Catalog.API.Products.GetProductByCategory
 
             if (products.Count==0)
             {
-                throw new ProductNotFoundException();
+                throw new ProductNotFoundException("Products not found");
             }
 
             return new GetProductByCategoryResult(products);

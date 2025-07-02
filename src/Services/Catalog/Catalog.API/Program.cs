@@ -1,7 +1,3 @@
-using BuildingBlocks.Behaviors;
-using Carter;
-using FluentValidation;
-using Marten;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -36,6 +32,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+builder.Services.AddExceptionHandler<CustomExceptionHandler>(); 
 var app = builder.Build();
 
 //Configure the Http request Pipeline
@@ -52,6 +49,8 @@ if (app.Environment.IsDevelopment())
 
 //Map Carter Endpoints
 app.MapCarter();
+
+app.UseExceptionHandler(options => { });
 
 app.Run();
  
