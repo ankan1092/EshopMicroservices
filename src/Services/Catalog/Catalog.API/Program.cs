@@ -1,15 +1,19 @@
-using Carter;
-using Marten;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 //Add services to the Container.
-builder.Services.AddCarter();
+var assembly = typeof(Program).Assembly;
 builder.Services.AddMediatR(config =>
 {
-    config.RegisterServicesFromAssemblies(typeof(Program).Assembly);
+    config.RegisterServicesFromAssemblies(assembly);
+    config.AddOpenBehavior(typeof(ValidationBehavior<,>));
 });
+builder.Services.AddValidatorsFromAssembly(assembly);
+
+builder.Services.AddCarter();
+
+builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 
 builder.Services.AddMarten(opts =>
 {
@@ -28,6 +32,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+builder.Services.AddExceptionHandler<CustomExceptionHandler>(); 
 var app = builder.Build();
 
 //Configure the Http request Pipeline
@@ -44,6 +49,8 @@ if (app.Environment.IsDevelopment())
 
 //Map Carter Endpoints
 app.MapCarter();
+
+app.UseExceptionHandler(options => { });
 
 app.Run();
  
