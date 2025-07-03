@@ -22,12 +22,10 @@ namespace Catalog.API.Products.DeleteProduct
     {
         private readonly IDocumentSession _session;
         private readonly IValidator<UpdateProductCommand> _validator;
-        private readonly ILogger<DeleteProductCommandHandler> _logger;
-        public DeleteProductCommandHandler(IDocumentSession session, IValidator<UpdateProductCommand> validator,ILogger<DeleteProductCommandHandler> logger)
+        public DeleteProductCommandHandler(IDocumentSession session, IValidator<UpdateProductCommand> validator)
         {
             _session = session;
             _validator = validator;
-            _logger = logger;
         }
         public async Task<DeleteProductCommandResult> Handle(DeleteProductCommandRequest request, CancellationToken cancellationToken)
         {
