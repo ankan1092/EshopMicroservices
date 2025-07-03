@@ -1,3 +1,4 @@
+using Catalog.API.Data;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +23,10 @@ builder.Services.AddMarten(opts =>
     opts.DisableNpgsqlLogging = true;
 
 }).UseLightweightSessions();
+
+//seed products with static data in dev environment
+if(builder.Environment.IsDevelopment())
+    builder.Services.InitializeMartenWith<CatalogInitialData>();
 
 // Add Swagger services
 builder.Services.AddEndpointsApiExplorer();
