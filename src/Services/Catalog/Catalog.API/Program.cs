@@ -40,7 +40,10 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-builder.Services.AddExceptionHandler<CustomExceptionHandler>(); 
+builder.Services.AddExceptionHandler<CustomExceptionHandler>();
+
+builder.Services.AddHealthChecks()
+    .AddNpgSql(builder.Configuration.GetConnectionString("Database")!);
 var app = builder.Build();
 
 //Configure the Http request Pipeline
@@ -59,6 +62,6 @@ if (app.Environment.IsDevelopment())
 app.MapCarter();
 
 app.UseExceptionHandler(options => { });
-
+app.UseHealthChecks("/health");
 app.Run();
  
