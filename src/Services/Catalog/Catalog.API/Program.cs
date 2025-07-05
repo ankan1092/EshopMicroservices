@@ -1,3 +1,6 @@
+using Catalog.API.Data;
+using HealthChecks.UI.Client;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,6 +26,10 @@ builder.Services.AddMarten(opts =>
 
 }).UseLightweightSessions();
 
+//seed products with static data in dev environment
+if(builder.Environment.IsDevelopment())
+    builder.Services.InitializeMartenWith<CatalogInitialData>();
+
 // Add Swagger services
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -35,7 +42,10 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-builder.Services.AddExceptionHandler<CustomExceptionHandler>(); 
+builder.Services.AddExceptionHandler<CustomExceptionHandler>();
+
+builder.Services.AddHealthChecks()
+    .AddNpgSql(builder.Configuration.GetConnectionString("Database")!);
 var app = builder.Build();
 
 //Configure the Http request Pipeline
@@ -54,6 +64,11 @@ if (app.Environment.IsDevelopment())
 app.MapCarter();
 
 app.UseExceptionHandler(options => { });
-
+app.UseHealthChecks("/health",
+    new HealthCheckOptions
+    {
+        ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+    }
+    );
 app.Run();
  
