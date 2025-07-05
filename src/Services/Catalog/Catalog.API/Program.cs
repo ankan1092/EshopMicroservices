@@ -1,4 +1,6 @@
 using Catalog.API.Data;
+using HealthChecks.UI.Client;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -62,6 +64,11 @@ if (app.Environment.IsDevelopment())
 app.MapCarter();
 
 app.UseExceptionHandler(options => { });
-app.UseHealthChecks("/health");
+app.UseHealthChecks("/health",
+    new HealthCheckOptions
+    {
+        ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+    }
+    );
 app.Run();
  
