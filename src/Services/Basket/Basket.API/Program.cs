@@ -1,3 +1,5 @@
+using Basket.API.Data;
+using Basket.API.Models;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.OpenApi.Models;
 
@@ -20,6 +22,9 @@ builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 builder.Services.AddMarten(opts =>
 {
     opts.Connection(builder.Configuration.GetConnectionString("Database")!);
+    opts.Schema.For<ShoppingCart>()
+        .Identity(x => x.UserName)
+        .Index(x => x.UserName);
     opts.DisableNpgsqlLogging = true;
 
 }).UseLightweightSessions();
@@ -41,6 +46,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.AddExceptionHandler<CustomExceptionHandler>();
+builder.Services.AddScoped<IBasketRepository, BasketRepository>();
 
 /*builder.Services.AddHealthChecks()
     .AddNpgSql(builder.Configuration.GetConnectionString("Database")!);
