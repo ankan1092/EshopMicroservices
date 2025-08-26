@@ -3,8 +3,14 @@
     "Docker Compose": {
       "commandName": "DockerCompose",
       "commandVersion": "1.0",
+      "composeLaunchAction": "None",
+      "composeLaunchServiceName": "catalog.api",
       "serviceActions": {
-        "catalog.api": "StartDebugging"
+        "catalog.api": "StartDebugging",
+        "basket.api": "StartDebugging",
+        "basketdb": "StartWithoutDebugging",
+        "catalogdb": "StartWithoutDebugging",
+        "distributedcache": "StartWithoutDebugging"
       }
     }
   }
