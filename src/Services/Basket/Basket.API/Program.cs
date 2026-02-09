@@ -47,6 +47,8 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.AddExceptionHandler<CustomExceptionHandler>();
+
+//Decorator pattern for caching
 builder.Services.AddScoped<IBasketRepository, BasketRepository>();
 builder.Services.Decorate<IBasketRepository, CachedBasketRepository>();
 
