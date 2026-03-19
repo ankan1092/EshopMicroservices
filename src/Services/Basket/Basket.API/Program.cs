@@ -7,6 +7,8 @@ using Microsoft.OpenApi.Models;
 var builder = WebApplication.CreateBuilder(args);
 
 //Add services to the Container.
+
+//Application Services
 var assembly = typeof(Program).Assembly;
 builder.Services.AddMediatR(config =>
 {
@@ -20,6 +22,8 @@ builder.Services.AddCarter();
 
 builder.Services.AddValidatorsFromAssembly(typeof(Program).Assembly);
 
+
+// Data Services
 builder.Services.AddMarten(opts =>
 {
     opts.Connection(builder.Configuration.GetConnectionString("Database")!);
@@ -44,6 +48,12 @@ builder.Services.AddSwaggerGen(options =>
         Version = "v1",
         Description = "API documentation for the ECommerce Catalog MicroService API."
     });
+});
+
+//gRPC Services
+builder.Services.AddGrpcClient<Discount.Grpc.DiscountProtoService.DiscountProtoServiceClient>(options =>
+{
+    options.Address = new Uri(builder.Configuration["GrpcSettings:DiscountUrl"]!);
 });
 
 builder.Services.AddExceptionHandler<CustomExceptionHandler>();
