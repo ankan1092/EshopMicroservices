@@ -1,5 +1,8 @@
+using Basket.API.Contracts;
 using Basket.API.Data;
 using Basket.API.Models;
+using Basket.API.Services;
+using Basket.API.Services.Resilience;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.OpenApi.Models;
@@ -50,12 +53,15 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+//Resilience Policies Configuration
+builder.Services.Configure<ResiliencePoliciesConfig>(builder.Configuration.GetSection("ResiliencePolicies"));
+
 //gRPC Services
 builder.Services.AddGrpcClient<Discount.Grpc.DiscountProtoService.DiscountProtoServiceClient>(options =>
 {
     options.Address = new Uri(builder.Configuration["GrpcSettings:DiscountUrl"]!);
 });
-
+builder.Services.AddScoped<IDiscountService, DiscountService>();
 builder.Services.AddExceptionHandler<CustomExceptionHandler>();
 
 //Decorator pattern for caching
