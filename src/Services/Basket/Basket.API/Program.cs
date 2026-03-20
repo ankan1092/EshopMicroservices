@@ -3,9 +3,12 @@ using Basket.API.Data;
 using Basket.API.Models;
 using Basket.API.Services;
 using Basket.API.Services.Resilience;
+using Discount.Grpc;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
+using Polly;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -61,6 +64,28 @@ builder.Services.AddGrpcClient<Discount.Grpc.DiscountProtoService.DiscountProtoS
 {
     options.Address = new Uri(builder.Configuration["GrpcSettings:DiscountUrl"]!);
 });
+
+
+builder.Services.AddSingleton<IAsyncPolicy<CouponModel>>(sp =>
+{
+    var logger = sp.GetRequiredService<ILogger<DiscountService>>();
+    var options = sp.GetRequiredService<IOptions<ResiliencePoliciesConfig>>();
+
+    var config = options.Value.Discount;
+
+    return RetryPolicyFactory.CreateResiliencePolicy<CouponModel>(
+        logger,
+        config.RetryCount,
+        config.InitialDelaySeconds,
+        config.CircuitBreakerFailureThreshold,
+        config.CircuitBreakerTimeoutSeconds,
+        "DiscountService");
+});
+
+
+
+
+
 builder.Services.AddScoped<IDiscountService, DiscountService>();
 builder.Services.AddExceptionHandler<CustomExceptionHandler>();
 
