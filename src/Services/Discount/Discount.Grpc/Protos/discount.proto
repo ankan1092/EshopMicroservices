@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+// Set the C# namespace for generated code
+option csharp_namespace = "Discount.Grpc";
+
+// Define the package name
+package discount;
+
+// The discount service definition.
+service DiscountProtoService {
+	// Get a discount by product name
+	rpc GetDiscount (GetDiscountRequest) returns (CouponModel);
+	// Create a new discount
+	rpc CreateDiscount (CreateDiscountRequest) returns (CouponModel);
+	// Update an existing discount
+	rpc UpdateDiscount (UpdateDiscountRequest) returns (CouponModel);
+	// Delete a discount by product name
+	rpc DeleteDiscount (DeleteDiscountRequest) returns (DeleteDiscountResponse);
+}
+
+// Request message for getting a discount
+message GetDiscountRequest {
+	string productName = 1; // Name of the product
+}
+
+// Model representing a coupon/discount
+message CouponModel {
+	int32 id = 1; // Unique identifier
+	string productName = 2; // Name of the product
+	string description = 3; // Description of the discount
+	int32 amount = 4; // Discount amount
+}
+
+// Request message for creating a discount
+message CreateDiscountRequest {
+	CouponModel coupon = 1; // Coupon to create
+}
+
+// Request message for updating a discount
+message UpdateDiscountRequest {
+	CouponModel coupon = 1; // Coupon to update
+}
+
+// Request message for deleting a discount
+message DeleteDiscountRequest {
+	string productName = 1; // Name of the product to delete
+}
+
+// Response message for delete operation
+message DeleteDiscountResponse {
+	bool success = 1; // Indicates if delete was successful
+}
+
+/*
+Messages:
+- GetDiscountRequest: Request to get a discount by product name
+- CouponModel: Represents a discount coupon
+- CreateDiscountRequest: Request to create a new discount
+- UpdateDiscountRequest: Request to update an existing discount
+- DeleteDiscountRequest: Request to delete a discount by product name
+- DeleteDiscountResponse: Response for delete operation
+
+Methods (RPCs):
+- GetDiscount: Retrieves a discount
+- CreateDiscount: Creates a new discount
+- UpdateDiscount: Updates an existing discount
+- DeleteDiscount: Deletes a discount
+*/
