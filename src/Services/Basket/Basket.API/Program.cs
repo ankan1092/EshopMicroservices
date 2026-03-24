@@ -77,8 +77,14 @@ builder.Services.AddSingleton<IAsyncPolicy<CouponModel>>(sp =>
         logger,
         config.RetryCount,
         config.InitialDelaySeconds,
+        config.BackoffMultiplier,
+        config.JitterFactorSeconds,
         config.CircuitBreakerFailureThreshold,
         config.CircuitBreakerTimeoutSeconds,
+        config.MaxConcurrentRequests,
+        config.MaxQueueingActions,
+        config.RateLimitPermitCount,
+        config.RateLimitPerSeconds,
         "DiscountService");
 });
 

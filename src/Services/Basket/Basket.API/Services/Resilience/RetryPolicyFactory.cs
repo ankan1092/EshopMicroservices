@@ -1,7 +1,7 @@
+using Grpc.Core;
 using Microsoft.Extensions.Logging;
 using Polly;
 using Polly.CircuitBreaker;
-using Grpc.Core;
 
 namespace Basket.API.Services.Resilience;
 
@@ -25,7 +25,9 @@ public static class RetryPolicyFactory
         int retryCount = 3,
         double initialDelaySeconds = 1,
         double backoffMultiplier = 2,
-        string policyName = "RetryPolicy")
+        double jitterFactorSeconds = 0.5,
+        string policyName = "RetryPolicy"
+    )
         where TResult : class
     {
         return Policy
@@ -33,15 +35,26 @@ public static class RetryPolicyFactory
             .OrResult<TResult>(r => r == null)
             .WaitAndRetryAsync<TResult>(
                 retryCount: retryCount,
-                sleepDurationProvider: attempt => 
-                    TimeSpan.FromSeconds(initialDelaySeconds * Math.Pow(backoffMultiplier, attempt - 1)),
+                sleepDurationProvider: attempt =>
+                {
+                    var exponentialDelay =
+                        initialDelaySeconds * Math.Pow(backoffMultiplier, attempt - 1);
+                    var jitter = Random.Shared.NextDouble() * jitterFactorSeconds;
+                    return TimeSpan.FromSeconds(exponentialDelay + jitter);
+                },
                 onRetry: (outcome, timespan, retryAttempt, context) =>
                 {
                     var errorMsg = outcome.Exception?.Message ?? "Request failed";
                     logger.LogWarning(
                         "[{PolicyName}] Retry attempt {RetryAttempt}/{RetryCount} after {DelaySeconds:F1}s due to: {ErrorMessage}",
-                        policyName, retryAttempt, retryCount, timespan.TotalSeconds, errorMsg);
-                });
+                        policyName,
+                        retryAttempt,
+                        retryCount,
+                        timespan.TotalSeconds,
+                        errorMsg
+                    );
+                }
+            );
     }
 
     /// <summary>
@@ -57,30 +70,46 @@ public static class RetryPolicyFactory
         ILogger logger,
         int retryCount = 3,
         double initialDelaySeconds = 1,
-        string policyName = "GrpcRetryPolicy")
+        double backoffMultiplier = 2,
+        double jitterFactorSeconds = 0.5,
+        string policyName = "GrpcRetryPolicy"
+    )
         where TResult : class
     {
         return Policy
             .Handle<RpcException>(ex =>
                 // Retry on transient gRPC errors
-                ex.StatusCode == StatusCode.Unavailable ||
-                ex.StatusCode == StatusCode.DeadlineExceeded ||
-                ex.StatusCode == StatusCode.ResourceExhausted)
+                ex.StatusCode == StatusCode.Unavailable
+                || ex.StatusCode == StatusCode.DeadlineExceeded
+                || ex.StatusCode == StatusCode.ResourceExhausted
+            )
             .Or<HttpRequestException>()
             .OrResult<TResult>(r => r == null)
             .WaitAndRetryAsync<TResult>(
                 retryCount: retryCount,
-                sleepDurationProvider: attempt => 
-                    TimeSpan.FromSeconds(initialDelaySeconds * Math.Pow(2, attempt - 1)),
+                sleepDurationProvider: attempt =>
+                {
+                    var exponentialDelay =
+                        initialDelaySeconds * Math.Pow(backoffMultiplier, attempt - 1);
+                    var jitter = Random.Shared.NextDouble() * jitterFactorSeconds;
+                    return TimeSpan.FromSeconds(exponentialDelay + jitter);
+                },
                 onRetry: (outcome, timespan, retryAttempt, context) =>
                 {
                     var errorMsg = outcome.Exception?.Message ?? "gRPC request failed";
-                    var statusCode = (outcome.Exception as RpcException)?.StatusCode.ToString() ?? "Unknown";
+                    var statusCode =
+                        (outcome.Exception as RpcException)?.StatusCode.ToString() ?? "Unknown";
 
                     logger.LogWarning(
                         "[{PolicyName}] Retry attempt {RetryAttempt}/{RetryCount} after {DelaySeconds:F1}s | Status: {StatusCode}",
-                        policyName, retryAttempt, retryCount, timespan.TotalSeconds, statusCode);
-                });
+                        policyName,
+                        retryAttempt,
+                        retryCount,
+                        timespan.TotalSeconds,
+                        statusCode
+                    );
+                }
+            );
     }
 
     /// <summary>
@@ -97,7 +126,8 @@ public static class RetryPolicyFactory
         ILogger logger,
         int failureThreshold = 5,
         int breakDurationSeconds = 15,
-        string policyName = "CircuitBreakerPolicy")
+        string policyName = "CircuitBreakerPolicy"
+    )
         where TResult : class
     {
         return Policy
@@ -111,20 +141,26 @@ public static class RetryPolicyFactory
                     var errorMsg = outcome.Exception?.Message ?? "Request failed";
                     logger.LogError(
                         "[{PolicyName}] Circuit breaker opened for {DurationSeconds}s after {FailureThreshold} consecutive failures.",
-                        policyName, duration.TotalSeconds, failureThreshold);
+                        policyName,
+                        duration.TotalSeconds,
+                        failureThreshold
+                    );
                 },
                 onReset: () =>
                 {
                     logger.LogInformation(
                         "[{PolicyName}] Circuit breaker reset - service recovered",
-                        policyName);
+                        policyName
+                    );
                 },
                 onHalfOpen: () =>
                 {
                     logger.LogInformation(
                         "[{PolicyName}] Circuit breaker half-open - testing service recovery",
-                        policyName);
-                });
+                        policyName
+                    );
+                }
+            );
     }
 
     /// <summary>
@@ -140,15 +176,17 @@ public static class RetryPolicyFactory
         ILogger logger,
         int failureThreshold = 5,
         int breakDurationSeconds = 15,
-        string policyName = "GrpcCircuitBreakerPolicy")
+        string policyName = "GrpcCircuitBreakerPolicy"
+    )
         where TResult : class
     {
         return Policy
             .Handle<RpcException>(ex =>
                 // Circuit break on transient gRPC errors
-                ex.StatusCode == StatusCode.Unavailable ||
-                ex.StatusCode == StatusCode.DeadlineExceeded ||
-                ex.StatusCode == StatusCode.ResourceExhausted)
+                ex.StatusCode == StatusCode.Unavailable
+                || ex.StatusCode == StatusCode.DeadlineExceeded
+                || ex.StatusCode == StatusCode.ResourceExhausted
+            )
             .Or<HttpRequestException>()
             .OrResult<TResult>(r => r == null)
             .CircuitBreakerAsync<TResult>(
@@ -157,43 +195,119 @@ public static class RetryPolicyFactory
                 onBreak: (outcome, duration) =>
                 {
                     var errorMsg = outcome.Exception?.Message ?? "gRPC request failed";
-                    var statusCode = (outcome.Exception as RpcException)?.StatusCode.ToString() ?? "Unknown";
+                    var statusCode =
+                        (outcome.Exception as RpcException)?.StatusCode.ToString() ?? "Unknown";
 
                     logger.LogError(
                         "[{PolicyName}] Circuit breaker opened for {DurationSeconds}s after {FailureThreshold} consecutive failures | Status: {StatusCode}",
-                        policyName, duration.TotalSeconds, failureThreshold, statusCode);
+                        policyName,
+                        duration.TotalSeconds,
+                        failureThreshold,
+                        statusCode
+                    );
                 },
                 onReset: () =>
                 {
                     logger.LogInformation(
                         "[{PolicyName}] gRPC Circuit breaker reset - service recovered",
-                        policyName);
+                        policyName
+                    );
                 },
                 onHalfOpen: () =>
                 {
                     logger.LogInformation(
                         "[{PolicyName}] gRPC Circuit breaker half-open - testing service recovery",
-                        policyName);
-                });
+                        policyName
+                    );
+                }
+            );
     }
 
+    private static IAsyncPolicy<TResult> CreateBulkheadPolicy<TResult>(
+        ILogger logger,
+        int maxConcurrentRequests = 10,
+        int maxQueueingActions = 20,
+        string policyName = "BulkheadPolicy"
+    )
+        where TResult : class
+    {
+        return Policy.BulkheadAsync<TResult>(
+            maxParallelization: maxConcurrentRequests,
+            maxQueuingActions: maxQueueingActions,
+            onBulkheadRejectedAsync: context =>
+            {
+                logger.LogWarning(
+                    "[{PolicyName}] Bulkhead rejected request because capacity is full (parallelizations={Parallel}, queue={Queue}).",
+                    policyName,
+                    maxConcurrentRequests,
+                    maxQueueingActions
+                );
+                return Task.CompletedTask;
+            }
+        );
+    }
+
+    private static IAsyncPolicy<TResult> CreateRateLimitPolicy<TResult>(
+        ILogger logger,
+        int permitCount = 20,
+        int perSeconds = 1,
+        string policyName = "RateLimitPolicy"
+    )
+        where TResult : class
+    {
+        return Policy.RateLimitAsync<TResult>(
+            permitCount,
+            TimeSpan.FromSeconds(perSeconds)
+        );
+    }
 
     public static IAsyncPolicy<TResult> CreateResiliencePolicy<TResult>(
-    ILogger logger,
-    int retryCount,
-    double initialDelaySeconds,
-    int failureThreshold,
-    int breakDurationSeconds,
-    string policyName)
-    where TResult : class
+        ILogger logger,
+        int retryCount,
+        double initialDelaySeconds,
+        double backoffMultiplier,
+        double jitterFactorSeconds,
+        int failureThreshold,
+        int breakDurationSeconds,
+        int maxConcurrentRequests,
+        int maxQueueingActions,
+        int rateLimitPermitCount,
+        int rateLimitPerSeconds,
+        string policyName
+    )
+        where TResult : class
     {
         var retry = CreateGrpcRetryPolicy<TResult>(
-            logger, retryCount, initialDelaySeconds, policyName);
+            logger,
+            retryCount,
+            initialDelaySeconds,
+            backoffMultiplier,
+            jitterFactorSeconds,
+            policyName
+        );
 
         var circuit = CreateGrpcCircuitBreakerPolicy<TResult>(
-            logger, failureThreshold, breakDurationSeconds, policyName);
+            logger,
+            failureThreshold,
+            breakDurationSeconds,
+            policyName
+        );
 
-        // IMPORTANT: order matters
-        return Policy.WrapAsync(retry, circuit);
+        var bulkhead = CreateBulkheadPolicy<TResult>(
+            logger,
+            maxConcurrentRequests,
+            maxQueueingActions,
+            policyName
+        );
+
+        var rateLimit = CreateRateLimitPolicy<TResult>(
+            logger,
+            rateLimitPermitCount,
+            rateLimitPerSeconds,
+            policyName
+        );
+
+        
+        return Policy.WrapAsync(rateLimit, bulkhead, circuit, retry);
     }
 }
