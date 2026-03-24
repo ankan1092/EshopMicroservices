@@ -52,7 +52,17 @@ services:
       - ASPNETCORE_HTTPS_PORTS=8081
       - ConnectionStrings__Database=Server=basketdb;Port=5432;Database=BasketDb;Username=postgres;Password=postgres;Include Error Detail=true
       - ConnectionStrings__Redis=distributedcache:6379
-      - GrpcSettings__DiscountUrl=https://discount.grpc:8081
+      - GrpcSettings__DiscountUrl=http://discount.grpc:8080
+      - ResiliencePolicies__Discount__RetryCount=2
+      - ResiliencePolicies__Discount__InitialDelaySeconds=1
+      - ResiliencePolicies__Discount__BackoffMultiplier=2
+      - ResiliencePolicies__Discount__JitterFactorSeconds=0.5
+      - ResiliencePolicies__Discount__CircuitBreakerFailureThreshold=4
+      - ResiliencePolicies__Discount__CircuitBreakerTimeoutSeconds=30
+      - ResiliencePolicies__Discount__MaxConcurrentRequests=10
+      - ResiliencePolicies__Discount__MaxQueueingActions=20
+      - ResiliencePolicies__Discount__RateLimitPermitCount=20
+      - ResiliencePolicies__Discount__RateLimitPerSeconds=1
     depends_on:
       - basketdb
       - distributedcache
