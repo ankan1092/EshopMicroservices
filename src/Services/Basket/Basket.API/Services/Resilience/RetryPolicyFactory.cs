@@ -255,10 +255,7 @@ public static class RetryPolicyFactory
     )
         where TResult : class
     {
-        return Policy.RateLimitAsync<TResult>(
-            permitCount,
-            TimeSpan.FromSeconds(perSeconds)
-        );
+        return Policy.RateLimitAsync<TResult>(permitCount, TimeSpan.FromSeconds(perSeconds));
     }
 
     public static IAsyncPolicy<TResult> CreateResiliencePolicy<TResult>(
@@ -307,7 +304,7 @@ public static class RetryPolicyFactory
             policyName
         );
 
-        
-        return Policy.WrapAsync(rateLimit, bulkhead, circuit, retry);
+        // IMPORTANT: order matters. throttling first, then retry, then circuit breaker
+        return Policy.WrapAsync(rateLimit, bulkhead, retry, circuit);
     }
 }

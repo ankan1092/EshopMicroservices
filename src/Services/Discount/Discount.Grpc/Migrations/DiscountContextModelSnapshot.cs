@@ -51,6 +51,34 @@ namespace Discount.Grpc.Migrations
                             Amount = 100,
                             Description = "Samsung Discount",
                             ProductName = "Samsung 10"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Amount = 50,
+                            Description = "Wireless Mouse Discount",
+                            ProductName = "Wireless Mouse"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Amount = 75,
+                            Description = "Mechanical Keyboard Discount",
+                            ProductName = "Mechanical Keyboard"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Amount = 25,
+                            Description = "Blue Product Discount",
+                            ProductName = "Blue Product"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Amount = 500,
+                            Description = "Laptop Discount",
+                            ProductName = "Laptop"
                         });
                 });
 #pragma warning restore 612, 618

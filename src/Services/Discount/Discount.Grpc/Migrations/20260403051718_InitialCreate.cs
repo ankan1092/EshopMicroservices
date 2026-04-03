@@ -33,7 +33,11 @@ namespace Discount.Grpc.Migrations
                 values: new object[,]
                 {
                     { 1, 150, "IPhone Discount", "IPhone X" },
-                    { 2, 100, "Samsung Discount", "Samsung 10" }
+                    { 2, 100, "Samsung Discount", "Samsung 10" },
+                    { 3, 50, "Wireless Mouse Discount", "Wireless Mouse" },
+                    { 4, 75, "Mechanical Keyboard Discount", "Mechanical Keyboard" },
+                    { 5, 25, "Blue Product Discount", "Blue Product" },
+                    { 6, 500, "Laptop Discount", "Laptop" }
                 });
         }
 
