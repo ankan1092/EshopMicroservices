@@ -68,7 +68,7 @@ public static class RetryPolicyFactory
     /// <returns>Configured async retry policy for gRPC calls</returns>
     private static IAsyncPolicy<TResult> CreateGrpcRetryPolicy<TResult>(
         ILogger logger,
-        int retryCount = 3,
+         int retryCount = 3,
         double initialDelaySeconds = 1,
         double backoffMultiplier = 2,
         double jitterFactorSeconds = 0.5,
@@ -107,7 +107,7 @@ public static class RetryPolicyFactory
                         retryCount,
                         timespan.TotalSeconds,
                         statusCode
-                    );
+                     );
                 }
             );
     }
