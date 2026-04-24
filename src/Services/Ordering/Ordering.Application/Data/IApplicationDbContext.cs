@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Ordering.Domain.Models;
+﻿using System.Threading;
+using System.Threading.Tasks;
 
 namespace Ordering.Application.Data;
 public interface IApplicationDbContext
